@@ -1,0 +1,23 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Test artifacts
+.bats-tmp/
+tests/tmp/
+*.log
+
+# Local overrides and secrets
+.env
+*.local
+endpoints.local.txt
+
+# Vendored test helpers (install via git clone / package manager)
+tests/helpers/
