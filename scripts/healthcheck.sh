@@ -13,6 +13,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source-path=SCRIPTDIR
 # shellcheck source=../lib/common.sh
 source "${SCRIPT_DIR}/../lib/common.sh"
 
@@ -49,6 +50,8 @@ EOF
 
 # probe_one URL TIMEOUT EXPECT SUBSTRING -> 0 healthy, 1 unhealthy
 # Prints a one-line summary on stdout.
+#
+# shellcheck disable=SC2329  # called from main() inside a command substitution
 probe_one() {
   local url="$1" timeout="$2" expect="$3" substring="$4"
   local body_file metrics code dns connect tls ttfb total rc=0

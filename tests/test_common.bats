@@ -5,6 +5,9 @@
 # Run with:  bats tests/
 # Install:   brew install bats-core   |   npm i -g bats   |   see docs/testing-bash.md
 
+# BATS_TEST_TMPDIR and `run -<status>` both need 1.5+.
+bats_require_minimum_version 1.5.0
+
 setup() {
   REPO_ROOT="$(cd -- "${BATS_TEST_DIRNAME}/.." && pwd)"
   export REPO_ROOT
@@ -92,8 +95,9 @@ in_lib() {
 }
 
 @test "require_cmd exits 127 and names every missing command" {
-  run bash -c "source '${LIB}'; require_cmd definitely_absent_aaa definitely_absent_bbb"
-  [ "$status" -eq 127 ]
+  # `run -127` declares the expected status, so bats does not warn about the
+  # 127 it would otherwise read as an accidental command-not-found.
+  run -127 bash -c "source '${LIB}'; require_cmd definitely_absent_aaa definitely_absent_bbb"
   [[ "$output" == *"definitely_absent_aaa"* ]]
   [[ "$output" == *"definitely_absent_bbb"* ]]
 }

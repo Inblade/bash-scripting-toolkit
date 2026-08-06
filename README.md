@@ -1,5 +1,9 @@
 # Bash Scripting Toolkit
 
+[![ci](https://github.com/Inblade/bash-scripting-toolkit/actions/workflows/ci.yml/badge.svg)](https://github.com/Inblade/bash-scripting-toolkit/actions/workflows/ci.yml)
+[![Bash 4.0+](https://img.shields.io/badge/bash-4.0%2B-4EAA25?logo=gnubash&logoColor=white)](https://www.gnu.org/software/bash/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 A small, reusable Bash library and a set of operational scripts built on top of
 it, plus the style and testing notes that go with them.
 
@@ -125,20 +129,28 @@ exit on failure).
 ## Development
 
 ```bash
-# Syntax check
-for f in lib/*.sh scripts/*.sh; do bash -n "$f"; done
+make check          # lint + syntax + tests, the same three things CI runs
+make lint           # shellcheck -x, style severity
+make test           # bats suite
+make install-hooks  # run lint + syntax before every commit
 
-# Static analysis (-x follows `source` directives)
-shellcheck -x lib/*.sh scripts/*.sh
-
-# Test suite
-bats tests/
-bats --print-output-on-failure --filter retry tests/
+bats --print-output-on-failure --filter retry tests/   # one group of tests
 ```
 
-The suite covers logging and level filtering, JSON escaping, exit-code
+35 tests covering logging and level filtering, JSON escaping, exit-code
 conventions, retry semantics, LIFO cleanup ordering, lock contention, temp-file
 cleanup, and a sanity pass over every shipped script.
+
+The last three are worth calling out, because they are the tests that catch the
+bugs Bash actually produces. Cleanup ordering is asserted to be LIFO, since a
+trap that removes a directory before unmounting something inside it fails only
+under load. Lock contention is tested with a second process genuinely running,
+not a mocked `flock`. And every shipped script is checked for `-h` and for exit
+code 2 on a usage error, so the CLI contract cannot rot silently.
+
+CI runs shellcheck at `--severity=style` (warnings are failures), the bats
+suite, and a syntax-and-load pass under bash 4.4 and 5.2 to keep the version
+floor in the README honest.
 
 ## Scope and non-goals
 

@@ -1,0 +1,75 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  shellcheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install shellcheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+
+      - name: Lint
+        # -x follows sourced files, so the library is analysed in the context
+        # of every script that uses it. Severity style: warnings are failures.
+        run: shellcheck -x --severity=style lib/*.sh scripts/*.sh
+
+      - name: Syntax check every script
+        run: |
+          for script in lib/*.sh scripts/*.sh; do
+            bash -n "$script"
+          done
+
+  bats:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bats
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y bats
+          bats --version
+
+      - name: Test
+        run: bats --print-output-on-failure tests/
+
+  bash-versions:
+    # The library declares bash 4.0+ and refuses to load below it. 4.4 is the
+    # oldest image published upstream, so it is the floor actually proven here;
+    # 5.2 is what current distributions ship.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        bash: ["4.4", "5.2"]
+    container: bash:${{ matrix.bash }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Syntax check under bash ${{ matrix.bash }}
+        run: |
+          bash --version | head -1
+          for script in lib/*.sh scripts/*.sh; do
+            bash -n "$script"
+          done
+
+      - name: Library loads and core helpers work
+        run: |
+          bash -c '
+            set -euo pipefail
+            source lib/common.sh
+            is_true yes || exit 1
+            [ "$(human_bytes 1536)" = "1.5 KiB" ] || { human_bytes 1536; exit 1; }
+            require_cmd bash
+          '
