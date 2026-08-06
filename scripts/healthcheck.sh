@@ -51,7 +51,9 @@ EOF
 # probe_one URL TIMEOUT EXPECT SUBSTRING -> 0 healthy, 1 unhealthy
 # Prints a one-line summary on stdout.
 #
-# shellcheck disable=SC2329  # called from main() inside a command substitution
+# Called from main() inside a command substitution, which the linter cannot
+# see. SC2317 is the pre-0.10 code for the same check.
+# shellcheck disable=SC2329,SC2317
 probe_one() {
   local url="$1" timeout="$2" expect="$3" substring="$4"
   local body_file metrics code dns connect tls ttfb total rc=0

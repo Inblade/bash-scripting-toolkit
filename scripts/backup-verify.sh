@@ -282,6 +282,8 @@ main() {
   [[ "$min_size" =~ ^[0-9]+$ ]] || die 2 "-m must be an integer"
 
   # Only one verification run at a time: a test restore can be I/O heavy.
+  # The lock file argument is optional and the default is what we want here.
+  # shellcheck disable=SC2119
   acquire_lock
 
   local newest
